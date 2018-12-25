@@ -1,0 +1,13 @@
+host: http://127.0.0.1:9200
+index: elsi
+type: documents
+gzip: false
+mapping:
+    settings:
+        number_of_shards: 1
+        number_of_replicas: 0
+pipeline:
+    description: "extract attachment information"
+    processors:
+        - attachment:
+            field: "data"

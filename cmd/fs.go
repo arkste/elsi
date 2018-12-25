@@ -1,0 +1,113 @@
+package cmd
+
+import (
+	"encoding/base64"
+	"io/ioutil"
+	"log"
+	"os"
+	"path/filepath"
+	"strings"
+	"time"
+
+	"github.com/arkste/elsi/utils"
+	"github.com/spf13/cobra"
+)
+
+var fsSourceDir string
+var fsExcludeFiles []string
+var fsSizeLimit int
+var fsPipeline bool
+
+// Document Struct
+type Document struct {
+	ID        string    `json:"id,omitempty"`
+	FilePath  string    `json:"filepath,omitempty"`
+	Name      string    `json:"name,omitempty"`
+	Extension string    `json:"extension,omitempty"`
+	Path      string    `json:"path,omitempty"`
+	Size      int64     `json:"size,omitempty"`
+	Mode      string    `json:"filemode,omitempty"`
+	ModTime   time.Time `json:"mod_time,omitempty"`
+	IsDir     bool      `json:"is_dir,omitempty"`
+	Data      string    `json:"data,omitempty"`
+}
+
+var filesystemCmd = &cobra.Command{
+	Use:   "fs",
+	Short: "Filesystem Indexer",
+	Run: func(cmd *cobra.Command, args []string) {
+		EsClient.UsePipeline = fsPipeline
+		EsClient.Init()
+
+		filepath.Walk(fsSourceDir, func(path string, info os.FileInfo, err error) error {
+			// Skip Excludes
+			for _, pattern := range fsExcludeFiles {
+				match, err := filepath.Match(pattern, info.Name())
+				if err != nil {
+					log.Fatalf("bad pattern provided %s", pattern)
+				}
+				if match {
+					return nil
+				}
+			}
+
+			// don't believe info
+			fileStat, err := os.Stat(path)
+			if err != nil {
+				log.Printf("Could not stat() file %s: %v", path, err)
+				return nil
+			}
+
+			// skip dirs
+			if fileStat.IsDir() {
+				return nil // filepath.SkipDir ?
+			}
+
+			var fileEncodedContent, filePipeline string
+			// check if pipeline processor is enabled
+			if fsPipeline {
+				// open file, only if its <= fileSizeLimit MB
+				if fileStat.Size() <= int64(fsSizeLimit*1024*1024) {
+					f, err := ioutil.ReadFile(path)
+					if err != nil {
+						log.Printf("File could not be opened %s: %v", path, err)
+						return nil
+					}
+
+					// convert file content to base64
+					fileEncodedContent = base64.StdEncoding.EncodeToString(f)
+					filePipeline = EsClient.PipelineName
+				}
+			}
+
+			// prepare elasticsearch document
+			document := Document{
+				ID:        utils.CreateHashFromString(path),
+				FilePath:  path,
+				Name:      fileStat.Name(),
+				Extension: strings.TrimLeft(filepath.Ext(fileStat.Name()), "."),
+				Path:      filepath.Dir(path),
+				Size:      fileStat.Size(),
+				Mode:      fileStat.Mode().String(),
+				ModTime:   fileStat.ModTime(),
+				IsDir:     fileStat.IsDir(),
+				Data:      fileEncodedContent,
+			}
+
+			EsClient.AddDocument(document.ID, document, filePipeline)
+
+			return nil
+		})
+
+		EsClient.Flush()
+	},
+}
+
+func init() {
+	rootCmd.AddCommand(filesystemCmd)
+	filesystemCmd.Flags().StringVarP(&fsSourceDir, "source", "s", fsSourceDir, "Source directory to read from")
+	filesystemCmd.MarkFlagRequired("source")
+	filesystemCmd.Flags().StringSliceVarP(&fsExcludeFiles, "exclude", "e", fsExcludeFiles, "Exclude File Patterns, comma seperated (eg: \"*.log,*.epub,*.sdf*\")")
+	filesystemCmd.Flags().IntVarP(&fsSizeLimit, "limit", "l", 10, "Limit Filesize in MB")
+	filesystemCmd.Flags().BoolVarP(&fsPipeline, "pipeline", "p", false, "Use Elasticsearch Pipeline Processor (Ingest Attachment Plugin required)")
+}
