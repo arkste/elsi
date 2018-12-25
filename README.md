@@ -21,7 +21,7 @@ or use Docker:
 
 + `docker pull arkste/elsi`
 
-or get a pre-compiled binary from the [Releases](/releases)-Page.
+or get a pre-compiled binary from the [Releases](https://github.com/arkste/elsi/releases)-Page.
 
 ## How to use
 
