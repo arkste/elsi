@@ -2,12 +2,10 @@ package cmd
 
 import (
 	"database/sql"
-	"encoding/json"
 	"log"
-	"strings"
 
-	// Import MySQL Driver
-	_ "github.com/go-sql-driver/mysql"
+	"github.com/arkste/elsi/utils"
+	_ "github.com/go-sql-driver/mysql" // Import MySQL Driver
 	"github.com/spf13/cobra"
 )
 
@@ -39,41 +37,14 @@ var mysqlCmd = &cobra.Command{
 		count := len(columns)
 		values := make([]interface{}, count)
 		valuePtrs := make([]interface{}, count)
-		var id string
 		for rows.Next() {
-			id = ""
 			for i := 0; i < count; i++ {
 				valuePtrs[i] = &values[i]
 			}
+
 			rows.Scan(valuePtrs...)
-			entry := make(map[string]interface{})
-			for i, col := range columns {
-				var v interface{}
-				val := values[i]
-				b, ok := val.([]byte)
-				if ok {
-					v = string(b)
-				} else {
-					v = val
-				}
-				entry[col] = v
-				if strings.ToLower(col) == "id" {
-					id, ok = v.(string)
-					if !ok {
-						id = ""
-					}
-				}
-			}
 
-			jsonData, err := json.Marshal(entry)
-			if err != nil {
-				log.Fatalln(err)
-			}
-			jsonDataString := string(jsonData)
-
-			if string(jsonDataString[0]) == "[" {
-				jsonDataString = "{\"data\":" + jsonDataString + "}"
-			}
+			id, jsonDataString := utils.ConvertToJSON(columns, values)
 
 			EsClient.AddDocument(id, jsonDataString, "")
 		}

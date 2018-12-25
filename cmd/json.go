@@ -41,13 +41,8 @@ var jsonCmd = &cobra.Command{
 				log.Printf("File could not be opened %s: %v", path, err)
 				return nil
 			}
-			fileContent := string(f)
 
-			if string(fileContent[0]) == "[" {
-				fileContent = "{\"data\":" + fileContent + "}"
-			}
-
-			EsClient.AddDocument(utils.CreateHashFromString(path), fileContent, "")
+			EsClient.AddDocument(utils.CreateHashFromString(path), utils.IsJSONArray(string(f)), "")
 
 			return nil
 		})
