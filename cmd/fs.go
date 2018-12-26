@@ -28,6 +28,7 @@ type Document struct {
 	Path      string    `json:"path,omitempty"`
 	Size      int64     `json:"size,omitempty"`
 	Mode      string    `json:"filemode,omitempty"`
+	ModeNum   string    `json:"filemode_num,omitempty"`
 	ModTime   time.Time `json:"mod_time,omitempty"`
 	IsDir     bool      `json:"is_dir,omitempty"`
 	Data      string    `json:"data,omitempty"`
@@ -55,7 +56,7 @@ var filesystemCmd = &cobra.Command{
 			// don't believe info
 			fileStat, err := os.Stat(path)
 			if err != nil {
-				return fmt.Errorf("Could not stat() file %s: %v", path, err)
+				return nil
 			}
 
 			// skip dirs
@@ -89,6 +90,7 @@ var filesystemCmd = &cobra.Command{
 				Path:      filepath.Dir(path),
 				Size:      fileStat.Size(),
 				Mode:      fileStat.Mode().String(),
+				ModeNum:   fmt.Sprintf("%04o", fileStat.Mode().Perm()),
 				ModTime:   fileStat.ModTime(),
 				IsDir:     fileStat.IsDir(),
 				Data:      fileEncodedContent,

@@ -27,7 +27,6 @@ var jsonCmd = &cobra.Command{
 			// don't believe info
 			fileStat, err := os.Stat(path)
 			if err != nil {
-				log.Printf("Could not stat() file %s: %v", path, err)
 				return nil
 			}
 
