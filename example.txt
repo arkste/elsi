@@ -1,5 +1,0 @@
-time go run elsi.go mysql -d "db:db@tcp(127.0.0.1:3306)/db?charset=utf8mb4&collation=utf8mb4_unicode_ci" -q "SELECT * FROM price_history"
-
-time go run elsi.go json -s /home/arno/www/pck/Data
-
-time go run elsi.go fs -s /home/arno/Downloads
