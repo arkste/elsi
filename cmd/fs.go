@@ -2,6 +2,7 @@ package cmd
 
 import (
 	"encoding/base64"
+	"fmt"
 	"io/ioutil"
 	"log"
 	"os"
@@ -35,16 +36,16 @@ type Document struct {
 var filesystemCmd = &cobra.Command{
 	Use:   "fs",
 	Short: "Filesystem Indexer",
-	Run: func(cmd *cobra.Command, args []string) {
+	RunE: func(cmd *cobra.Command, args []string) error {
 		EsClient.UsePipeline = fsPipeline
 		EsClient.Init()
 
-		filepath.Walk(fsSourceDir, func(path string, info os.FileInfo, err error) error {
+		err := filepath.Walk(fsSourceDir, func(path string, info os.FileInfo, err error) error {
 			// Skip Excludes
 			for _, pattern := range fsExcludeFiles {
 				match, err := filepath.Match(pattern, info.Name())
 				if err != nil {
-					log.Fatalf("bad pattern provided %s", pattern)
+					return fmt.Errorf("bad pattern provided %s", pattern)
 				}
 				if match {
 					return nil
@@ -54,8 +55,7 @@ var filesystemCmd = &cobra.Command{
 			// don't believe info
 			fileStat, err := os.Stat(path)
 			if err != nil {
-				log.Printf("Could not stat() file %s: %v", path, err)
-				return nil
+				return fmt.Errorf("Could not stat() file %s: %v", path, err)
 			}
 
 			// skip dirs
@@ -98,8 +98,13 @@ var filesystemCmd = &cobra.Command{
 
 			return nil
 		})
+		if err != nil {
+			return err
+		}
 
 		EsClient.Flush()
+
+		return nil
 	},
 }
 

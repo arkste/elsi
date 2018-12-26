@@ -15,10 +15,10 @@ var jsonSourceDir string
 var jsonCmd = &cobra.Command{
 	Use:   "json",
 	Short: "JSON Indexer",
-	Run: func(cmd *cobra.Command, args []string) {
+	RunE: func(cmd *cobra.Command, args []string) error {
 		EsClient.Init()
 
-		filepath.Walk(jsonSourceDir, func(path string, info os.FileInfo, err error) error {
+		err := filepath.Walk(jsonSourceDir, func(path string, info os.FileInfo, err error) error {
 			// skip all files which dont have a "*.json" file extension
 			if filepath.Ext(info.Name()) != ".json" {
 				return nil
@@ -46,8 +46,13 @@ var jsonCmd = &cobra.Command{
 
 			return nil
 		})
+		if err != nil {
+			return err
+		}
 
 		EsClient.Flush()
+
+		return nil
 	},
 }
 

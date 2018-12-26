@@ -62,47 +62,55 @@ func (es *Client) AddDocument(id string, document interface{}, pipeline string) 
 		Pipeline(pipeline))
 }
 
-func (es *Client) createClient() {
+func (es *Client) createClient() error {
 	client, err := elastic.NewClient(
 		elastic.SetURL(es.Host),
 		elastic.SetGzip(es.Gzip),
 	)
 	if err != nil {
-		log.Fatalln(err)
+		return err
 	}
 
 	es.client = client
+
+	return nil
 }
 
-func (es *Client) pingClient() {
+func (es *Client) pingClient() error {
 	info, code, err := es.client.Ping(es.Host).Do(context.Background())
 	if err != nil {
-		log.Fatalln(err)
+		return err
 	}
 	log.Printf("Elasticsearch returned code \"%d\" and version \"%s\"\n", code, info.Version.Number)
+
+	return nil
 }
 
-func (es *Client) aliasedIndices() {
+func (es *Client) aliasedIndices() error {
 	res, err := es.client.Aliases().Index("_all").Do(context.Background())
 	if err != nil {
-		log.Fatalln(err)
+		return err
 	}
 
 	es.tmpOldIndices = res.IndicesByAlias(es.Index)
+
+	return nil
 }
 
-func (es *Client) createIndex() {
+func (es *Client) createIndex() error {
 	// Create Index
 	t := time.Now()
 	es.indexName = fmt.Sprintf("%s_%s", es.Index, t.Format("2006-01-02-150405"))
 	_, err := es.client.CreateIndex(es.indexName).BodyString(es.Mapping).Do(context.Background())
 	if err != nil {
-		log.Fatalln(err)
+		return err
 	}
 	log.Printf("Elasticsearch Index \"%s\" created\n", es.indexName)
+
+	return nil
 }
 
-func (es *Client) createPipeline() {
+func (es *Client) createPipeline() error {
 	// Check if Pipeline exists, if yes delete
 	_, err := es.client.IngestGetPipeline(es.PipelineName).Do(context.Background())
 	if err == nil {
@@ -111,12 +119,14 @@ func (es *Client) createPipeline() {
 	// Create a new Pipeline (in case the mapping changed)
 	_, err = es.client.IngestPutPipeline(es.PipelineName).BodyJson(es.Pipeline).Do(context.Background())
 	if err != nil {
-		log.Fatalln(err)
+		return err
 	}
 	log.Printf("Elasticsearch Pipeline \"%s\" created\n", es.PipelineName)
+
+	return nil
 }
 
-func (es *Client) createProcessor() {
+func (es *Client) createProcessor() error {
 	workers := runtime.NumCPU()
 
 	// Create BulkProcessor
@@ -126,39 +136,50 @@ func (es *Client) createProcessor() {
 		BulkActions(1000).
 		Do(context.Background())
 	if err != nil {
-		log.Fatalln(err)
+		return err
 	}
 
 	es.processor = processor
 	log.Printf("Elasticsearch Bulk Processor with %d Workers created\n", workers)
+
+	return nil
 }
 
-func (es *Client) flushProcessor() {
+func (es *Client) flushProcessor() error {
 	// Flush BulkProcessor
 	err := es.processor.Flush()
 	if err != nil {
-		log.Fatalln(err)
+		return err
 	}
 	log.Println("Elasticsearch Bulk Processor flushed")
 
 	// Close BulkProcessor
 	es.processor.Close()
 	log.Println("Elasticsearch Bulk Processor closed")
+
+	return nil
 }
 
-func (es *Client) createAlias() {
+func (es *Client) createAlias() error {
 	// Create/Replace alias
 	_, err := es.client.Alias().Add(es.indexName, es.Index).Do(context.Background())
 	if err != nil {
-		log.Fatalln(err)
+		return err
 	}
 	log.Printf("Elasticsearch Alias \"%s\" mapped to Index \"%s\"\n", es.Index, es.indexName)
+
+	return nil
 }
 
-func (es *Client) deleteOldIndices() {
-	// Delete Old Indices and ignore all errors
+func (es *Client) deleteOldIndices() error {
+	// Delete Old (aliases) Indices
 	for _, oldIndex := range es.tmpOldIndices {
-		es.client.DeleteIndex(oldIndex).Do(context.Background())
+		_, err := es.client.DeleteIndex(oldIndex).Do(context.Background())
+		if err != nil {
+			return err
+		}
 		log.Printf("Old Elasticsearch Index \"%s\" deleted\n", oldIndex)
 	}
+
+	return nil
 }

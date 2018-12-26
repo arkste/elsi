@@ -57,6 +57,9 @@ func initConfig() {
 
 	if err := viper.ReadInConfig(); err == nil {
 		log.Println("Using config file:", viper.ConfigFileUsed())
+	} else {
+		log.Println(err)
+		log.Fatalln("Please create a new config file in your Home Directory or provide a path with --config")
 	}
 
 	viper.Unmarshal(&EsClient)

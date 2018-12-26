@@ -2,7 +2,6 @@ package cmd
 
 import (
 	"database/sql"
-	"log"
 
 	"github.com/arkste/elsi/utils"
 	_ "github.com/go-sql-driver/mysql" // Import MySQL Driver
@@ -15,23 +14,23 @@ var mysqlQuery string
 var mysqlCmd = &cobra.Command{
 	Use:   "mysql",
 	Short: "MySQL Indexer",
-	Run: func(cmd *cobra.Command, args []string) {
+	RunE: func(cmd *cobra.Command, args []string) error {
 		EsClient.Init()
 
 		db, err := sql.Open("mysql", mysqlDSN)
 		if err != nil {
-			log.Fatalln(err)
+			return err
 		}
 		defer db.Close()
 
 		rows, err := db.Query(mysqlQuery)
 		if err != nil {
-			log.Fatalln(err)
+			return err
 		}
 
 		columns, err := rows.Columns()
 		if err != nil {
-			log.Fatalln(err)
+			return err
 		}
 
 		count := len(columns)
@@ -42,7 +41,10 @@ var mysqlCmd = &cobra.Command{
 				valuePtrs[i] = &values[i]
 			}
 
-			rows.Scan(valuePtrs...)
+			err := rows.Scan(valuePtrs...)
+			if err != nil {
+				return err
+			}
 
 			id, jsonDataString := utils.ConvertToJSON(columns, values)
 
@@ -50,6 +52,8 @@ var mysqlCmd = &cobra.Command{
 		}
 
 		EsClient.Flush()
+
+		return nil
 	},
 }
 
