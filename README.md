@@ -8,7 +8,7 @@ elsi currently doesn't provide any syncing of the data, you'll have to reindex t
 
 Since Elasticsearch exposes a REST-API on Port 9200, there's no need for elsi providing a REST-API itself.
 
-**elsi is compatible with Elasticsearch 5.x.x & 6.x.x**
+elsi is compatible with **Elasticsearch 6.x.x**
 
 ## Install
 
