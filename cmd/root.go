@@ -22,7 +22,16 @@ var EsClient elasticsearch.Client
 
 var rootCmd = &cobra.Command{
 	Use:   "elsi",
-	Short: "Elasticsearch Indexer (elsi)",
+	Short: "elsi (Elasticsearch Indexer) lets you quickly populate data into Elasticsearch from different data sources.",
+	Run: func(cmd *cobra.Command, args []string) {
+		if len(args) == 0 {
+			printVersionFlag, err := cmd.PersistentFlags().GetBool("version")
+			if err == nil && printVersionFlag {
+				printVersion(cmd, args)
+				return
+			}
+		}
+	},
 }
 
 // Execute ist the Root Cmd Exection
@@ -36,7 +45,7 @@ func Execute() {
 func init() {
 	cobra.OnInitialize(initConfig)
 	rootCmd.PersistentFlags().StringVar(&cfgFile, "config", "", "config file (default is $HOME/.elsi.yaml)")
-	rootCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
+	rootCmd.PersistentFlags().BoolP("version", "v", false, "display version number")
 }
 
 func initConfig() {

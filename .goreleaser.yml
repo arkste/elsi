@@ -1,5 +1,6 @@
 builds:
-- env:
+- binary: elsi
+  env:
   - CGO_ENABLED=0
   goos:
     - linux
@@ -10,6 +11,7 @@ builds:
     - amd64
     - arm
     - arm64
+  ldflags: -s -w -X main.version={{.Version}} -X main.commit={{.Commit}} -X main.buildTime={{.Date}}`.
 archive:
   replacements:
     darwin: Darwin
@@ -17,6 +19,10 @@ archive:
     windows: Windows
     386: i386
     amd64: x86_64
+  format: tar.gz
+  format_overrides:
+    - goos: windows
+      format: zip
 checksum:
   name_template: 'checksums.txt'
 snapshot:
