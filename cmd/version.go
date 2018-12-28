@@ -6,6 +6,7 @@ import (
 	"github.com/spf13/cobra"
 )
 
+// Version represents the version
 type Version struct {
 	Version   string
 	Commit    string
@@ -25,6 +26,7 @@ func init() {
 	rootCmd.AddCommand(versionCmd)
 }
 
+// SetVersion sets the version
 func SetVersion(v *Version) {
 	version = v
 }

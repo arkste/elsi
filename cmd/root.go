@@ -34,7 +34,7 @@ var rootCmd = &cobra.Command{
 	},
 }
 
-// Execute ist the Root Cmd Exection
+// Execute ist the Root Cmd Execution
 func Execute() {
 	if err := rootCmd.Execute(); err != nil {
 		fmt.Println(err)

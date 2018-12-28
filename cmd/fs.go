@@ -114,7 +114,7 @@ func init() {
 	rootCmd.AddCommand(filesystemCmd)
 	filesystemCmd.Flags().StringVarP(&fsSourceDir, "source", "s", fsSourceDir, "Source directory to read from")
 	filesystemCmd.MarkFlagRequired("source")
-	filesystemCmd.Flags().StringSliceVarP(&fsExcludeFiles, "exclude", "e", fsExcludeFiles, "Exclude File Patterns, comma seperated (eg: \"*.log,*.epub,*.sdf*\")")
+	filesystemCmd.Flags().StringSliceVarP(&fsExcludeFiles, "exclude", "e", fsExcludeFiles, "Exclude File Patterns, comma separated (eg: \"*.log,*.epub,*.sdf*\")")
 	filesystemCmd.Flags().IntVarP(&fsSizeLimit, "limit", "l", 10, "Limit Filesize in MB")
 	filesystemCmd.Flags().BoolVarP(&fsPipeline, "pipeline", "p", false, "Use Elasticsearch Pipeline Processor (Ingest Attachment Plugin required)")
 }
