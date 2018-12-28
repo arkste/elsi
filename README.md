@@ -1,5 +1,12 @@
 # elsi
 
+[![Go Report Card](https://goreportcard.com/badge/github.com/arkste/elsi)](https://goreportcard.com/report/github.com/arkste/elsi)
+[![License](https://img.shields.io/badge/license-MIT-blue.svg)](https://raw.githubusercontent.com/arkste/elsi/master/LICENSE)
+[![Golang](https://img.shields.io/badge/Go-1.11-blue.svg)](https://golang.org)
+![Linux](https://img.shields.io/badge/Supports-Linux-green.svg)
+![macOS](https://img.shields.io/badge/Supports-macOS-green.svg)
+![windows](https://img.shields.io/badge/Supports-windows-green.svg)
+
 elsi (Elasticsearch Indexer) is a simple multi-threaded command line tool written in Go (Golang) to help you quickly populate some data into Elasticsearch from different data sources.
 
 Usually you'll have to import a third-party Elasticsearch client library into your project before you're able to get data into Elasticsearch, but sometimes third-party libraries don't exist, are outdated or there are other reasons why you can't import a client library. This is the problem elsi tries to solve.
