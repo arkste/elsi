@@ -134,6 +134,7 @@ func (es *Client) createProcessor() error {
 		Name("Indexer").
 		Workers(workers).
 		BulkActions(1000).
+		BulkSize(2 << 20).
 		Do(context.Background())
 	if err != nil {
 		return err
