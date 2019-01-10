@@ -41,12 +41,12 @@ var filesystemCmd = &cobra.Command{
 		EsClient.UsePipeline = fsPipeline
 		EsClient.Init()
 
-		err := filepath.Walk(fsSourceDir, func(path string, info os.FileInfo, err error) error {
+		if err := filepath.Walk(fsSourceDir, func(path string, info os.FileInfo, err error) error {
 			// Skip Excludes
 			for _, pattern := range fsExcludeFiles {
 				match, err := filepath.Match(pattern, info.Name())
 				if err != nil {
-					return fmt.Errorf("bad pattern provided %s", pattern)
+					return fmt.Errorf("bad pattern provided %q", pattern)
 				}
 				if match {
 					return nil
@@ -71,7 +71,7 @@ var filesystemCmd = &cobra.Command{
 				if fileStat.Size() <= int64(fsSizeLimit*1024*1024) {
 					f, err := ioutil.ReadFile(path)
 					if err != nil {
-						log.Printf("File could not be opened %s: %v", path, err)
+						log.Printf("File could not be opened %q: %v", path, err)
 						return nil
 					}
 
@@ -99,8 +99,7 @@ var filesystemCmd = &cobra.Command{
 			EsClient.AddDocument(document.ID, document, filePipeline)
 
 			return nil
-		})
-		if err != nil {
+		}); err != nil {
 			return err
 		}
 

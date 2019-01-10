@@ -32,7 +32,6 @@ func (es *Client) Init() {
 		es.PipelineName = "elsi_attachment"
 	}
 	es.createClient()
-	es.pingClient()
 	es.aliasedIndices()
 	es.createIndex()
 	if es.UsePipeline {
@@ -70,18 +69,7 @@ func (es *Client) createClient() error {
 	if err != nil {
 		return err
 	}
-
 	es.client = client
-
-	return nil
-}
-
-func (es *Client) pingClient() error {
-	info, code, err := es.client.Ping(es.Host).Do(context.Background())
-	if err != nil {
-		return err
-	}
-	log.Printf("Elasticsearch returned code \"%d\" and version \"%s\"\n", code, info.Version.Number)
 
 	return nil
 }
@@ -105,7 +93,7 @@ func (es *Client) createIndex() error {
 	if err != nil {
 		return err
 	}
-	log.Printf("Elasticsearch Index \"%s\" created\n", es.indexName)
+	log.Printf("Elasticsearch Index %q created\n", es.indexName)
 
 	return nil
 }
@@ -121,7 +109,7 @@ func (es *Client) createPipeline() error {
 	if err != nil {
 		return err
 	}
-	log.Printf("Elasticsearch Pipeline \"%s\" created\n", es.PipelineName)
+	log.Printf("Elasticsearch Pipeline %q created\n", es.PipelineName)
 
 	return nil
 }
@@ -148,14 +136,15 @@ func (es *Client) createProcessor() error {
 
 func (es *Client) flushProcessor() error {
 	// Flush BulkProcessor
-	err := es.processor.Flush()
-	if err != nil {
+	if err := es.processor.Flush(); err != nil {
 		return err
 	}
 	log.Println("Elasticsearch Bulk Processor flushed")
 
 	// Close BulkProcessor
-	es.processor.Close()
+	if err := es.processor.Close(); err != nil {
+		return err
+	}
 	log.Println("Elasticsearch Bulk Processor closed")
 
 	return nil
@@ -167,7 +156,7 @@ func (es *Client) createAlias() error {
 	if err != nil {
 		return err
 	}
-	log.Printf("Elasticsearch Alias \"%s\" mapped to Index \"%s\"\n", es.Index, es.indexName)
+	log.Printf("Elasticsearch Alias %q mapped to Index %q\n", es.Index, es.indexName)
 
 	return nil
 }
@@ -179,7 +168,7 @@ func (es *Client) deleteOldIndices() error {
 		if err != nil {
 			return err
 		}
-		log.Printf("Old Elasticsearch Index \"%s\" deleted\n", oldIndex)
+		log.Printf("Old Elasticsearch Index %q deleted\n", oldIndex)
 	}
 
 	return nil

@@ -41,8 +41,7 @@ var mysqlCmd = &cobra.Command{
 				valuePtrs[i] = &values[i]
 			}
 
-			err := rows.Scan(valuePtrs...)
-			if err != nil {
+			if err := rows.Scan(valuePtrs...); err != nil {
 				return err
 			}
 

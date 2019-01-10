@@ -18,7 +18,7 @@ var jsonCmd = &cobra.Command{
 	RunE: func(cmd *cobra.Command, args []string) error {
 		EsClient.Init()
 
-		err := filepath.Walk(jsonSourceDir, func(path string, info os.FileInfo, err error) error {
+		if err := filepath.Walk(jsonSourceDir, func(path string, info os.FileInfo, err error) error {
 			// skip all files which dont have a "*.json" file extension
 			if filepath.Ext(info.Name()) != ".json" {
 				return nil
@@ -37,15 +37,14 @@ var jsonCmd = &cobra.Command{
 
 			f, err := ioutil.ReadFile(path)
 			if err != nil {
-				log.Printf("File could not be opened %s: %v", path, err)
+				log.Printf("File could not be opened %q: %v", path, err)
 				return nil
 			}
 
 			EsClient.AddDocument(utils.CreateHashFromString(path), utils.IsJSONArray(string(f)), "")
 
 			return nil
-		})
-		if err != nil {
+		}); err != nil {
 			return err
 		}
 
