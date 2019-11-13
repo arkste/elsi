@@ -1,13 +1,24 @@
-all: install
+all: build
 
 build:
-	go build
+	@go build
 
 install:
-	go install
+	@go install
+
+commit: dep lint vet format test
+
+lint:
+	@golint -set_exit_status ./...
+
+vet:
+	@go vet ./...
+
+format:
+	@goimports -d .
 
 test:
-	gofmt -d -s .
-	go vet ./...
-	golint -set_exit_status ./...
-	go test ./...
+	@go test ./...
+
+dep:
+	@go get -v -d ./...
